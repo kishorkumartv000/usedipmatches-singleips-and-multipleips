@@ -44,9 +44,9 @@ def check_ip_operations(target_ip: str) -> Dict[str, List[str]]:
     
     return results
 
-def format_results(results: Dict[str, List[str]]) -> str:
+def format_results(target_ip: str, results: Dict[str, List[str]]) -> str:
     """Format results in the requested output style."""
-    output_lines = [f"Report for IP: {args.ip}\n" + "-"*40]
+    output_lines = [f"Report for IP: {target_ip}\n" + "-"*40]
     
     for operation, countries in results.items():
         if countries:
@@ -67,7 +67,7 @@ def main():
 
     try:
         results = check_ip_operations(args.ip)
-        print(format_results(results))
+        print(format_results(args.ip, results))
         
         print("\nNote: To add IPs to the database, place them in the appropriate")
         print(f"files under the {BASE_DIR} directory structure (e.g., {BASE_DIR}/creating/India.txt)")
