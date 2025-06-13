@@ -5,7 +5,7 @@ on:
     inputs:
       single_ip:
         description: "Single IP address to check (optional)"
-        required: true
+        required: false
         type: string
       ip_file:
         description: "File with multiple IPs (optional)"
