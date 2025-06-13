@@ -3,10 +3,19 @@ name: IP Checker
 on:
   workflow_dispatch:
     inputs:
-      ip_address:
-        description: "IP address to check"
+      single_ip:
+        description: "Single IP address to check (optional)"
         required: true
         type: string
+      ip_file:
+        description: "File with multiple IPs (optional)"
+        required: false
+        type: string
+      upload_artifact:
+        description: "Upload IP database as artifact? (true/false)"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   ip-check:
@@ -14,8 +23,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Ensure all files are fetched
           
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -23,12 +30,24 @@ jobs:
           python-version: '3.10'
           
       - name: Run IP Checker
+        id: run_checker
         run: |
-          python ip_checker.py --ip "${{ inputs.ip_address }}"
+          # Handle both input types
+          if [ -n "${{ inputs.single_ip }}" ] && [ -n "${{ inputs.ip_file }}" ]; then
+            python ip_checker.py --ip "${{ inputs.single_ip }}" --file "${{ inputs.ip_file }}"
+          elif [ -n "${{ inputs.single_ip }}" ]; then
+            python ip_checker.py --ip "${{ inputs.single_ip }}"
+          elif [ -n "${{ inputs.ip_file }}" ]; then
+            python ip_checker.py --file "${{ inputs.ip_file }}"
+          else
+            echo "Error: Please provide at least one IP input method"
+            exit 1
+          fi
           
       - name: Archive Report
+        if: ${{ inputs.upload_artifact }}
         uses: actions/upload-artifact@v4
         with:
-          name: ip-check-results
+          name: ip-check-results-${{ github.run_id }}
           path: |
             ip_data/**/*.txt
