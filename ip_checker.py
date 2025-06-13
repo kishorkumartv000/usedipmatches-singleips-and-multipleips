@@ -61,17 +61,50 @@ def main():
     # Setup directory structure first
     setup_directories()
     
-    parser = argparse.ArgumentParser(description="Check IP against operations and countries")
-    parser.add_argument("--ip", required=True, help="IP address to check")
+    parser = argparse.ArgumentParser(description="Check IPs against operations and countries")
+    parser.add_argument("--ip", help="Single IP address to check")
+    parser.add_argument("--file", help="File containing multiple IPs to check (one per line)")
     args = parser.parse_args()
 
     try:
-        results = check_ip_operations(args.ip)
-        print(format_results(args.ip, results))
+        ips_to_check = []
         
-        print("\nNote: To add IPs to the database, place them in the appropriate")
-        print(f"files under the {BASE_DIR} directory structure (e.g., {BASE_DIR}/creating/India.txt)")
+        # Handle single IP input
+        if args.ip:
+            ips_to_check.append(args.ip)
         
+        # Handle file input
+        if args.file:
+            ips_to_check.extend(load_ips_from_file(args.file))
+        
+        # Check we have at least one IP
+        if not ips_to_check:
+            print("Error: Please provide either --ip or --file argument")
+            return
+        
+        all_results = []
+        for ip in ips_to_check:
+            results = check_ip_operations(ip)
+            all_results.append((ip, results))
+            print(format_results(ip, results))
+            print("\n" + "="*50 + "\n")  # Separator between IP reports
+        
+        # Print summary
+        print("\nSUMMARY REPORT")
+        print("==============")
+        for ip, results in all_results:
+            found_in = []
+            for operation, countries in results.items():
+                if countries:
+                    found_in.append(operation)
+            
+            if found_in:
+                print(f"{ip}: Found in {', '.join(found_in)}")
+            else:
+                print(f"{ip}: Not found in any operations")
+        
+    except FileNotFoundError:
+        print(f"Error: File not found")
     except Exception as e:
         print(f"Error: {e}")
 
